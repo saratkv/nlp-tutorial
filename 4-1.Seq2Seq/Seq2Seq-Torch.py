@@ -48,8 +48,8 @@ class Seq2Seq(nn.Module):
         self.fc = nn.Linear(n_hidden, n_class)
 
     def forward(self, enc_input, enc_hidden, dec_input):
-        enc_input = enc_input.transpose(0, 1) # enc_input: [max_len(=n_step, time step), batch_size, n_hidden]
-        dec_input = dec_input.transpose(0, 1) # dec_input: [max_len(=n_step, time step), batch_size, n_hidden]
+        enc_input = enc_input.transpose(0, 1) # enc_input: [max_len(=n_step, time step), batch_size, n_class]
+        dec_input = dec_input.transpose(0, 1) # dec_input: [max_len(=n_step, time step), batch_size, n_class]
 
         # enc_states : [num_layers(=1) * num_directions(=1), batch_size, n_hidden]
         _, enc_states = self.enc_cell(enc_input, enc_hidden)
@@ -71,15 +71,15 @@ for epoch in range(5000):
     hidden = Variable(torch.zeros(1, batch_size, n_hidden))
 
     optimizer.zero_grad()
-    # input_batch : [batch_size, max_len(=n_step, time step), n_hidden]
-    # output_batch : [batch_size, max_len+1(=n_step, time step) (becase of 'S' or 'E'), n_hidden]
+    # input_batch : [batch_size, max_len(=n_step, time step), n_class]
+    # output_batch : [batch_size, max_len+1(=n_step, time step) (becase of 'S' or 'E'), n_class]
     # target_batch : [batch_size, max_len+1(=n_step, time step)], not one-hot
     output = model(input_batch, hidden, output_batch)
-    # output : [max_len+1, batch_size, num_directions(=1) * n_hidden]
-    output = output.transpose(0, 1) # [batch_size, max_len+1(=6), num_directions(=1) * n_hidden]
+    # output : [max_len+1, batch_size, n_class]
+    output = output.transpose(0, 1) # [batch_size, max_len+1(=6), n_class]
     loss = 0
     for i in range(0, len(target_batch)):
-        # output[i] : [max_len+1, num_directions(=1) * n_hidden, target_batch[i] : max_len+1]
+        # output[i] : [max_len+1, n_class, target_batch[i] : max_len+1]
         loss += criterion(output[i], target_batch[i])
     if (epoch + 1) % 1000 == 0:
         print('Epoch:', '%04d' % (epoch + 1), 'cost =', '{:.6f}'.format(loss))
